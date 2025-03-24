@@ -1,0 +1,78 @@
+local AutoGK = false
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0.5, -100, 0.1, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0.3, 0)
+Title.Text = "Owner: Pth3"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Parent = Frame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(1, 0, 0.7, 0)
+ToggleButton.Text = "Auto GK: OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.Parent = Frame
+
+ToggleButton.MouseButton1Click:Connect(function()
+    AutoGK = not AutoGK
+    ToggleButton.Text = "Auto GK: " .. (AutoGK and "ON" or "OFF")
+end)
+
+-- Auto GK Function
+local function AutoGKFunction()
+    while true do
+        if AutoGK then
+            for _, ball in pairs(workspace:GetChildren()) do
+                if ball:IsA("Part") and ball.Name == "SoccerBall" then
+                    local ballPosition = ball.Position
+                    local keeper = game.Players.LocalPlayer.Character
+                    local keeperPosition = keeper.PrimaryPart.Position
+                    
+                    -- Check if the ball is in the goalkeeper box
+                    if (ballPosition - keeperPosition).Magnitude < 15 then
+                        -- Catch the ball
+                        ball.Position = keeper.PrimaryPart.Position
+
+                        -- Find nearest teammate
+                        local nearestTeammate = nil
+                        local shortestDistance = math.huge
+                        for _, player in pairs(game.Players:GetPlayers()) do
+                            if player.Team == game.Players.LocalPlayer.Team and player ~= game.Players.LocalPlayer then
+                                local teammateCharacter = player.Character
+                                if teammateCharacter then
+                                    local distance = (teammateCharacter.PrimaryPart.Position - keeperPosition).Magnitude
+                                    if distance < shortestDistance then
+                                        shortestDistance = distance
+                                        nearestTeammate = teammateCharacter
+                                    end
+                                end
+                            end
+                        end
+
+                        -- Pass the ball
+                        if nearestTeammate then
+                            ball.Position = nearestTeammate.PrimaryPart.Position
+                            local sound = Instance.new("Sound", keeper)
+                            sound.SoundId = "rbxassetid://8119607795" -- Get Out Sound
+                            sound:Play()
+                        end
+                    end
+                end
+            end
+        end
+        wait(0.1) -- Reduce lag
+    end
+end
+
+spawn(AutoGKFunction)
